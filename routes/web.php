@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -16,12 +17,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [PageController::class, 'index'])->name('page.index');
+Route::get('/', [PageController::class, 'index'])->name('page.index')->middleware('guest');
 
 Auth::routes();
 
 Route::group(['middleware' => 'auth', 'prefix' => 'home'], function () {
-    Route::get('/', [HomeController::class, 'index'])->name('home.index');
-    Route::post('/', [HomeController::class, 'store'])->name('home.store');
+    Route::group(['controller' => UserController::class, 'middleware' => 'user'], function () {
+        Route::get('/', 'index')->name('home.user.index');
+        Route::post('/', 'store')->name('home.user.store');
+    });
+    Route::group(['controller' => ManagerController::class, 'prefix' => 'manager', 'middleware' => 'manager'], function () {
+        Route::get('/', 'index')->name('home.manager.index');
+    });
 });
-
