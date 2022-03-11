@@ -1,0 +1,1 @@
+- Тестовый проект на позицию Junior Laravel Developer для компании Amedia Online Group
