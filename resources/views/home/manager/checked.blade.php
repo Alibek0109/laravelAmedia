@@ -3,7 +3,7 @@
 @section('content')
     <div class="container">
         <div class="row justify-content-center">
-            <h2 class="text-center mb-5">New messages</h2>
+            <h2 class="text-center mb-5">Checked messages</h2>
             <hr>
 
             @if(session('success'))
@@ -23,15 +23,20 @@
                         <p>Created: {{ $el->created_at->format('d F Y. H:i:s') }}</p>
                         <hr>
 
-                        @if ($el->status === 0)
-                            <form action="{{route('home.manager.store')}}" method="POST">
+                        @if ($el->status === 1)
+                            <form action="{{ route('home.manager.update', ['id' => $el->id]) }}" method="POST">
                                 @csrf
+                                @method('PUT')
                                 <div class="form-group mb-2">
-                                    <textarea class="form-control" name="reply_message" placeholder="Reply"></textarea>
+                                    <textarea class="form-control" name="reply_message"
+                                        placeholder="Reply">{{ $el->feedback->reply_message }}</textarea>
                                 </div>
-                                <input type="hidden" name="user_id" value="{{$el->user->id}}">
-                                <input type="hidden" name="app_id" value="{{$el->id}}">
-                                <button type="submit" class="btn btn-primary">Reply</button>
+                                <button type="submit" class="btn btn-warning">Edit</button>
+                            </form>
+                            <form action="{{ route('home.manager.destroy', ['id' => $el->id]) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">Recheck</button>
                             </form>
                         @endif
 

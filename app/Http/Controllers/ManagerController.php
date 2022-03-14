@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Application;
+use App\Models\Feedback;
+use App\Models\User;
+use App\Policies\ManagerPolicy;
 use Illuminate\Http\Request;
 
 class ManagerController extends Controller
@@ -12,79 +16,83 @@ class ManagerController extends Controller
         $this->middleware('manager');
         $this->middleware('auth');
     }
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
+
     public function index()
     {
-        return view('home.manager.index');
+        $apps = Application::where('status', 0)->get();
+        return view('home.manager.index', ['data' => $apps]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function checked()
     {
-        //
+        $apps = Application::where('status', 1)->get();
+        return view('home.manager.checked', ['data' => $apps]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-        //
+        $validation = $request->validate([
+            'reply_message' => 'required|min:3',
+            'app_id' => 'integer',
+            'user_id' => 'integer',
+        ]);
+
+        $replyMessage = Feedback::create([
+            'reply_message' => $request->input('reply_message'),
+            'app_id' => $request->input('app_id'),
+            'user_id' => $request->input('user_id'),
+        ]);
+
+        $statusChange = Application::find($request->input('app_id'))->update([
+            'status' => 1,
+        ]);
+
+        return redirect()->route('home.manager.checked')->with('success', 'Application has been reviewed');
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
-        //
+        $validation = $request->validate([
+            'reply_message' => 'required',
+        ]);
+
+        $changeReplyMessage = Feedback::find($id)->update([
+            'reply_message' => $request->input('reply_message'),
+        ]);
+
+        return redirect()->route('home.manager.checked')->with('success', 'Edited reply message');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
+    // public function recheck(Request $request, $id)
+    // {
+    //     $validation = $request->validate([
+    //         'status' => 'required',
+    //     ]);
+
+    //     if ($request->input('status') == 0) {
+    //         $appRecheck = Application::find($id)->update([
+    //             'status' => 0,
+    //         ]);
+
+    //         $feedbackRecheck = Application::find($id)->feedback->update([
+    //             'reply_message' => '',
+    //         ]);
+    //     }
+
+    //     return redirect()->route('home.manager.index')->with('success', 'Application sent to review');
+    // }
+
     public function destroy($id)
     {
-        //
+        Application::find($id)->update([
+            'status' => 0,
+        ]);
+
+        Application::find($id)->feedback->delete();
+
+        return redirect()->route('home.manager.index')->with('success', 'Application sent to review');
     }
 }
