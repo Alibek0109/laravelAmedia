@@ -59,7 +59,11 @@
                             @if (Auth::user()->role === 'user')
                                 <li class="nav-item">
                                     <a class="nav-link"
-                                        href="{{ route('home.user.index') }}">{{ __('Home') }}</a>
+                                        href="{{ route('home.user.index') }}">{{ __('Applications') }}</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link"
+                                        href="{{ route('home.user.checked') }}">{{ __('Checked Applications') }}</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link"

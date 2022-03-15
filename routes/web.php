@@ -16,6 +16,7 @@ Route::group(['middleware' => 'auth', 'prefix' => 'home'], function () {
     Route::group(['controller' => UserController::class, 'middleware' => 'user'], function () {
         Route::get('/', 'index')->name('home.user.index');
         Route::get('/create', 'create')->name('home.user.create');
+        Route::get('/checked', 'checked')->name('home.user.checked');
         Route::post('/', 'store')->name('home.user.store');
         Route::get('/{id}/edit', 'edit')->name('home.user.edit');
         Route::put('/{id}', 'update')->name('home.user.update');

@@ -6,9 +6,19 @@
             <h2 class="text-center mb-5">New messages</h2>
             <hr>
 
-            @if(session('success'))
+            @if (session('success'))
                 <div class="alert alert-success">
-                    {{session('success')}}
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
@@ -24,13 +34,14 @@
                         <hr>
 
                         @if ($el->status === 0)
-                            <form action="{{route('home.manager.store')}}" method="POST">
+                            <form action="{{ route('home.manager.store') }}" method="POST">
                                 @csrf
                                 <div class="form-group mb-2">
                                     <textarea class="form-control" name="reply_message" placeholder="Reply"></textarea>
+
                                 </div>
-                                <input type="hidden" name="user_id" value="{{$el->user->id}}">
-                                <input type="hidden" name="app_id" value="{{$el->id}}">
+                                <input type="hidden" name="user_id" value="{{ $el->user->id }}">
+                                <input type="hidden" name="app_id" value="{{ $el->id }}">
                                 <button type="submit" class="btn btn-primary">Reply</button>
                             </form>
                         @endif
