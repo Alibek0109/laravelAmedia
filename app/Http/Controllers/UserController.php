@@ -4,11 +4,10 @@ namespace App\Http\Controllers;
 
 use Intervention\Image\ImageManagerStatic as Image;
 use App\Models\Application;
-use App\Policies\UserPolicy;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+
 
 class UserController extends Controller
 {
@@ -25,42 +24,51 @@ class UserController extends Controller
         return view('home.user.index', ['data' => $apps]);
     }
 
-    public function checked() {
+    public function checked()
+    {
         $apps = Application::where('user_id', Auth::id())->where('status', 1)->get();
         return view('home.user.checked', ['data' => $apps]);
     }
 
-    public function create() {
+    public function create()
+    {
         return view('home.user.create');
     }
 
     public function store(Request $request)
     {
-        $validation = $request->validate([
-            'subject' => 'required|min:3',
-            'message' => 'required|min:3',
-            'file' => 'required|image|mimes:png,jpeg,jpg,pdf|max:2048',
-        ]);
+        $appModel = Application::where('user_id', Auth::id())->latest()->first();
+        if($appModel == null || $appModel->created_at >= Carbon::instance($appModel->created_at)->add(1, 'day')) {
+            $validation = $request->validate([
+                'subject' => 'required|min:3',
+                'message' => 'required|min:3',
+                'file' => 'required|image|mimes:png,jpeg,jpg,pdf|max:2048',
+            ]);
 
-        if($request->hasFile('file')) {
-            $image = $request->file('file');
-            $filename = $image->getClientOriginalName();
+            if ($request->hasFile('file')) {
+                $image = $request->file('file');
+                $filename = $image->getClientOriginalName();
 
 
-            $updatedFilename = 'files\\' . time() . $filename;
-            $image_resize = Image::make($image->getRealPath());
-            $image_resize->resize(300, 400);
-            $image_resize->save(public_path($updatedFilename));
+                $updatedFilename = 'files\\' . time() . $filename;
+                $image_resize = Image::make($image->getRealPath());
+                $image_resize->resize(300, 400);
+                $image_resize->save(public_path($updatedFilename));
+            }
+
+            $flight = Application::create([
+                'subject' => $request->input('subject'),
+                'message' => $request->input('message'),
+                'file' => $updatedFilename,
+                'user_id' => Auth::id(),
+            ]);
+
+            return redirect()->route('home.user.index')->with('success', 'Application created successfully');
+        } else {
+            // Вернуть пользователя на страницу create потому что не прошло 24 часа с последней публикации
+            return redirect()->route('home.user.create')->with('error', 'Error. Unable to create an application in the next 24 hours');
         }
 
-        $flight = Application::create([
-            'subject' => $request->input('subject'),
-            'message' => $request->input('message'),
-            'file' => $updatedFilename,
-            'user_id' => Auth::id(),
-        ]);
-
-        return redirect()->route('home.user.index')->with('success', 'Application created successfully');
     }
 
 
@@ -79,7 +87,7 @@ class UserController extends Controller
             'file' => 'required|image|mimes:png,jpeg,jpg,pdf|max:2048'
         ]);
 
-        if($request->hasFile('file')) {
+        if ($request->hasFile('file')) {
             $image = $request->file('file');
             $filename = $image->getClientOriginalName();
 
